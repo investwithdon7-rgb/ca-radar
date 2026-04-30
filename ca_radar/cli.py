@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import webbrowser
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -19,6 +20,16 @@ from rich.table import Table
 
 from ca_radar import __author__, __organisation__, __version__, __website__
 
+
+def _make_stdio_resilient() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(errors="replace")
+
+
+_make_stdio_resilient()
+
 _BRANDING = f"[dim]{__author__} | {__organisation__} | {__website__}[/dim]"
 
 app = typer.Typer(
@@ -27,7 +38,7 @@ app = typer.Typer(
         "Conditional Access Gap Analyser & Visualiser for Microsoft 365 / Entra ID.\n\n"
         "Read-only. Produces a static HTML report and JSON findings file.\n"
         "No data is ever written back to the tenant.\n\n"
-        "[bold cyan]Quick start:[/bold cyan]  ca-radar setup  →  ca-radar scan\n\n"
+        "[bold cyan]Quick start:[/bold cyan]  ca-radar setup  ->  ca-radar scan\n\n"
         "[dim]By Anjula Weeranayake | TekDruid | https://tekdruid.com[/dim]"
     ),
     rich_markup_mode="rich",
@@ -58,7 +69,7 @@ def main(
 
 
 # ===========================================================================
-# setup — interactive wizard
+# setup - interactive wizard
 # ===========================================================================
 
 
@@ -90,8 +101,8 @@ def setup() -> None:
     )
     console.print()
 
-    # ── Step 1 — tenant ─────────────────────────────────────────────────────
-    console.rule("[bold]Step 1 of 4 — Tenant[/bold]")
+    # Step 1 - tenant
+    console.rule("[bold]Step 1 of 4 - Tenant[/bold]")
     console.print(
         "\nEnter your tenant [bold]domain name[/bold] or [bold]tenant ID[/bold] (GUID).\n"
         "[dim]Examples:  contoso.onmicrosoft.com  |  contoso.com  |  "
@@ -102,9 +113,9 @@ def setup() -> None:
         console.print("[red]Tenant is required.[/red]")
         raise typer.Exit(1)
 
-    # ── Step 2 — App Registration guide ──────────────────────────────────────
+    # Step 2 - App Registration guide
     console.print()
-    console.rule("[bold]Step 2 of 4 — App Registration[/bold]")
+    console.rule("[bold]Step 2 of 4 - App Registration[/bold]")
     console.print(
         "\nca-radar needs a [bold]read-only[/bold] app registration in your tenant.\n"
         "No write permissions are ever required.\n"
@@ -122,13 +133,13 @@ def setup() -> None:
         )
         webbrowser.open(portal_url)
         console.print(
-            "\n[dim]Browser opened — create your app registration, then come back here.[/dim]\n"
+            "\n[dim]Browser opened - create your app registration, then come back here.[/dim]\n"
         )
-        input("  Press Enter when you have your Client ID ready…")
+        input("  Press Enter when you have your Client ID ready...")
     console.print()
 
-    # ── Step 3 — Client ID ────────────────────────────────────────────────────
-    console.rule("[bold]Step 3 of 4 — Client ID & Auth Mode[/bold]")
+    # Step 3 - Client ID
+    console.rule("[bold]Step 3 of 4 - Client ID & Auth Mode[/bold]")
     console.print(
         "\nPaste the [bold]Application (client) ID[/bold] from your app registration.\n"
         "[dim]Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx[/dim]\n"
@@ -141,9 +152,9 @@ def setup() -> None:
     # Auth mode selection
     console.print(
         "\nHow should ca-radar authenticate?\n\n"
-        "  [bold cyan]1[/bold cyan]  Delegated (device-code) — browser sign-in, recommended for interactive use\n"
-        "  [bold cyan]2[/bold cyan]  App (certificate) — unattended / CI/CD use\n"
-        "  [bold cyan]3[/bold cyan]  App (client secret) — unattended, less secure than certificate\n"
+        "  [bold cyan]1[/bold cyan]  Delegated (device-code) - browser sign-in, recommended for interactive use\n"
+        "  [bold cyan]2[/bold cyan]  App (certificate) - unattended / CI/CD use\n"
+        "  [bold cyan]3[/bold cyan]  App (client secret) - unattended, less secure than certificate\n"
     )
     auth_choice = Prompt.ask(
         "[bold cyan]Auth mode[/bold cyan]",
@@ -164,9 +175,9 @@ def setup() -> None:
             password=True,
         ).strip()
 
-    # ── Step 4 — Options ──────────────────────────────────────────────────────
+    # Step 4 - Options
     console.print()
-    console.rule("[bold]Step 4 of 4 — Options[/bold]")
+    console.rule("[bold]Step 4 of 4 - Options[/bold]")
     console.print()
 
     out = (
@@ -179,11 +190,11 @@ def setup() -> None:
 
     redact = Confirm.ask(
         "[bold cyan]Redact user UPNs in snapshots?[/bold cyan] "
-        "[dim](recommended — stores SHA-256 hashes instead of real names)[/dim]",
+        "[dim](recommended - stores SHA-256 hashes instead of real names)[/dim]",
         default=True,
     )
 
-    # ── Save ──────────────────────────────────────────────────────────────────
+    # Save
     console.print()
     cfg = RadarConfig(
         tenant=tenant,
@@ -198,7 +209,7 @@ def setup() -> None:
 
     console.print(
         Panel(
-            f"[bold green]✓ Configuration saved[/bold green]\n\n"
+            f"[bold green]OK Configuration saved[/bold green]\n\n"
             f"  File     : [bold]{saved_path}[/bold]\n"
             f"  Tenant   : [bold]{tenant}[/bold]\n"
             f"  Client ID: [bold]{client_id}[/bold]\n"
@@ -211,7 +222,7 @@ def setup() -> None:
     )
     console.print()
 
-    # ── Offer a first scan ────────────────────────────────────────────────────
+    # Offer a first scan
     run_now = Confirm.ask(
         "[bold cyan]Run your first scan now?[/bold cyan]",
         default=True,
@@ -225,15 +236,15 @@ def _print_app_reg_instructions() -> None:
     """Print step-by-step app registration instructions."""
     console.print(
         "[bold]Steps to create the app registration:[/bold]\n\n"
-        "  1. In the Azure portal, go to  [cyan]Azure Active Directory[/cyan]  →  "
-        "[cyan]App registrations[/cyan]  →  [cyan]New registration[/cyan]\n\n"
+        "  1. In the Azure portal, go to  [cyan]Azure Active Directory[/cyan]  ->  "
+        "[cyan]App registrations[/cyan]  ->  [cyan]New registration[/cyan]\n\n"
         "  2. [bold]Name:[/bold]  ca-radar  (or any name you prefer)\n"
         "     [bold]Supported account types:[/bold]  "
         "[bold white]Accounts in this organisational directory only[/bold white]\n"
         "     [bold]Redirect URI:[/bold]  leave blank\n\n"
         "  3. Click [bold]Register[/bold].  Copy the [bold]Application (client) ID[/bold].\n\n"
-        "  4. Go to [cyan]API permissions[/cyan]  →  [cyan]Add a permission[/cyan]  "
-        "→  [cyan]Microsoft Graph[/cyan]  →  [cyan]Application permissions[/cyan]\n\n"
+        "  4. Go to [cyan]API permissions[/cyan]  ->  [cyan]Add a permission[/cyan]  "
+        "->  [cyan]Microsoft Graph[/cyan]  ->  [cyan]Application permissions[/cyan]\n\n"
         "     Add the following permissions (all read-only):\n"
     )
 
@@ -247,18 +258,18 @@ def _print_app_reg_instructions() -> None:
         ("Application.Read.All", "Read service principals / apps"),
     ]
     for perm, desc in perms:
-        console.print(f"     • [bold cyan]{perm:<45}[/bold cyan]  [dim]{desc}[/dim]")
+        console.print(f"     - [bold cyan]{perm:<45}[/bold cyan]  [dim]{desc}[/dim]")
 
     console.print(
         "\n  5. Click [cyan]Grant admin consent[/cyan] for your organisation.\n\n"
-        "  6. [bold](Delegated auth only)[/bold]  Go to [cyan]Authentication[/cyan]  →  "
+        "  6. [bold](Delegated auth only)[/bold]  Go to [cyan]Authentication[/cyan]  ->  "
         "under [cyan]Advanced settings[/cyan]  enable  "
         "[bold white]Allow public client flows[/bold white].\n"
     )
 
 
 # ===========================================================================
-# scan — single tenant
+# scan - single tenant
 # ===========================================================================
 
 
@@ -318,12 +329,12 @@ def scan(
     """Scan a single tenant and collect a snapshot to disk.
 
     When [bold]~/.ca-radar/config.yaml[/bold] exists (created by
-    [bold]ca-radar setup[/bold]) all options are optional — saved values
+    [bold]ca-radar setup[/bold]) all options are optional - saved values
     are used as defaults.  CLI flags override saved config.
     """
     from ca_radar.config import RadarConfig
 
-    # ── Load saved config then overlay CLI flags ─────────────────────────────
+    # Load saved config then overlay CLI flags
     cfg = RadarConfig.load()
     cfg = cfg.merge_cli(
         tenant=tenant,
@@ -337,7 +348,7 @@ def scan(
         concurrency=(concurrency if concurrency > 0 else None),
     )
 
-    # ── Validate required fields ──────────────────────────────────────────────
+    # Validate required fields
     if not cfg.tenant:
         console.print(
             "[bold red]Error:[/bold red] No tenant specified.\n\n"
@@ -421,8 +432,8 @@ async def _run_scan(
     auth = _build_auth(auth_mode, tenant, client_id, cert_path, client_secret)
     store = SnapshotStore(base_dir=out)
 
-    # ── 1. Collect ──────────────────────────────────────────────────────────
-    with console.status("[cyan]Collecting snapshot from Graph…[/cyan]"):
+    # 1. Collect
+    with console.status("[cyan]Collecting snapshot from Graph...[/cyan]"):
         async with GraphClient(auth=auth) as client:
             collection = await collect_snapshot(
                 client=client,
@@ -434,8 +445,8 @@ async def _run_scan(
 
     _print_collection_summary(collection)
 
-    # ── 2. Analyse ──────────────────────────────────────────────────────────
-    with console.status("[cyan]Running gap analysis…[/cyan]"):
+    # 2. Analyse
+    with console.status("[cyan]Running gap analysis...[/cyan]"):
         from ca_radar.resolver.policy_graph import PolicyGraph
 
         data = SnapshotData.from_store(collection.snapshot_path, store)
@@ -450,7 +461,7 @@ async def _run_scan(
     from ca_radar.exports.json_export import export_json
     from ca_radar.render.html.renderer import render_html_report
 
-    # ── 3. Write findings.json (versioned schema) ────────────────────────────
+    # 3. Write findings.json (versioned schema)
     findings_path = collection.snapshot_path / "findings.json"
     findings_path.write_text(
         export_json(
@@ -462,17 +473,17 @@ async def _run_scan(
         ),
         encoding="utf-8",
     )
-    console.print(f"[dim]  findings.json  → {findings_path}[/dim]")
+    console.print(f"[dim]  findings.json  -> {findings_path}[/dim]")
 
-    # ── 4. Write findings.csv ────────────────────────────────────────────────
+    # 4. Write findings.csv
     csv_path = collection.snapshot_path / "findings.csv"
     csv_path.write_text(
         export_csv(analysis, tenant_id=tenant, captured_at=collection.captured_at),
         encoding="utf-8-sig",
     )
-    console.print(f"[dim]  findings.csv   → {csv_path}[/dim]")
+    console.print(f"[dim]  findings.csv   -> {csv_path}[/dim]")
 
-    # ── 5. Write remediation.bicep (only when findings have templates) ───────
+    # 5. Write remediation.bicep (only when findings have templates)
     bicep_src = export_bicep(
         analysis,
         tenant_id=tenant,
@@ -482,10 +493,10 @@ async def _run_scan(
     if bicep_src:
         bicep_path = collection.snapshot_path / "remediation.bicep"
         bicep_path.write_text(bicep_src, encoding="utf-8")
-        console.print(f"[dim]  remediation.bicep → {bicep_path}[/dim]")
+        console.print(f"[dim]  remediation.bicep -> {bicep_path}[/dim]")
 
-    # ── 6. Write report.html ─────────────────────────────────────────────────
-    with console.status("[cyan]Rendering HTML report…[/cyan]"):
+    # 6. Write report.html
+    with console.status("[cyan]Rendering HTML report...[/cyan]"):
         graph = PolicyGraph.from_data(data)
         html = render_html_report(
             analysis,
@@ -497,9 +508,9 @@ async def _run_scan(
         )
     report_path = collection.snapshot_path / "report.html"
     report_path.write_text(html, encoding="utf-8")
-    console.print(f"\n[bold green]✓ Report ready[/bold green]  {report_path}")
+    console.print(f"\n[bold green]OK Report ready[/bold green]  {report_path}")
 
-    # ── 7. Save trend entry ──────────────────────────────────────────────────
+    # 7. Save trend entry
     try:
         from ca_radar.analysers.base import Severity
         from ca_radar.trend.store import TrendStore
@@ -581,9 +592,9 @@ def _print_collection_summary(result: object) -> None:
     table.add_column("Status")
 
     for name in result.resources_captured:
-        table.add_row(name, "[green]✓ captured[/green]")
+        table.add_row(name, "[green]OK captured[/green]")
     for name in result.resources_failed:
-        table.add_row(name, "[red]✗ failed[/red]")
+        table.add_row(name, "[red]X failed[/red]")
 
     console.print(table)
 
@@ -592,7 +603,7 @@ def _print_collection_summary(result: object) -> None:
             "\n[yellow]Scope warnings (affected findings will be indeterminate):[/yellow]"
         )
         for w in result.scope_warnings:
-            console.print(f"  [dim]⚠[/dim] {w}")
+            console.print(f"  [dim]WARN[/dim] {w}")
 
     console.print(
         Panel.fit(
@@ -620,7 +631,7 @@ def _print_analysis_summary(result: object) -> None:
     if not result.findings:
         console.print(
             Panel.fit(
-                "[bold green]✓ No findings[/bold green] — posture score [bold]100/100[/bold]\n"
+                "[bold green]OK No findings[/bold green] - posture score [bold]100/100[/bold]\n"
                 f"[dim]Analysis completed in {result.elapsed_seconds:.1f}s[/dim]",
                 border_style="green",
             )
@@ -645,7 +656,7 @@ def _print_analysis_summary(result: object) -> None:
 
     for f in result.findings:
         colour = _sev_colour.get(f.severity, "white")
-        affected = str(len(f.affected_principals)) if f.affected_principals else "—"
+        affected = str(len(f.affected_principals)) if f.affected_principals else "-"
         conf = f"{f.confidence:.0%}" if f.confidence < 1.0 else "100%"
         table.add_row(
             f.id,
@@ -672,7 +683,7 @@ def _print_analysis_summary(result: object) -> None:
 
 
 # ===========================================================================
-# scan-all — MSP portfolio mode
+# scan-all - MSP portfolio mode
 # ===========================================================================
 
 
@@ -716,7 +727,7 @@ def scan_all(
         raise typer.Exit(1) from exc
 
     if not tenants.tenants:
-        console.print("[yellow]No tenants found in file — nothing to do.[/yellow]")
+        console.print("[yellow]No tenants found in file - nothing to do.[/yellow]")
         raise typer.Exit(0)
 
     console.print(
@@ -756,7 +767,7 @@ def scan_all(
             console.print(f"[bold red]  Tenant {tc.id} failed:[/bold red] {exc}")
             failed.append(tc.id)
 
-    # ── Portfolio report ─────────────────────────────────────────────────────
+    # Portfolio report
     _render_portfolio(out, completed)
 
     # Final summary
@@ -796,7 +807,7 @@ def _render_portfolio(out: str, completed: list[dict]) -> None:
         )
         portfolio_path = Path(out) / "portfolio.html"
         portfolio_path.write_text(html, encoding="utf-8")
-        console.print(f"\n[bold green]✓ Portfolio report[/bold green]  {portfolio_path}")
+        console.print(f"\n[bold green]OK Portfolio report[/bold green]  {portfolio_path}")
     except Exception as exc:
         console.print(f"[yellow]  Portfolio render skipped: {exc}[/yellow]")
 

@@ -1,6 +1,10 @@
 """Smoke tests for the CLI entry point."""
 
+import os
 import re
+import subprocess
+import sys
+from pathlib import Path
 
 from typer.testing import CliRunner
 
@@ -27,6 +31,23 @@ def test_help() -> None:
     out = _plain(result.output)
     assert "scan" in out
     assert "setup" in out
+
+
+def test_help_does_not_crash_on_cp1252_output() -> None:
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "cp1252:strict"
+    env["PYTHONUTF8"] = "0"
+
+    result = subprocess.run(
+        [sys.executable, "-m", "ca_radar", "--help"],
+        check=False,
+        cwd=Path(__file__).resolve().parents[1],
+        env=env,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0
+    assert b"UnicodeEncodeError" not in result.stderr
 
 
 def test_scan_help() -> None:
