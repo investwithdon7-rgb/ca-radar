@@ -6,6 +6,14 @@ versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.1.1] — 2026-04-30
+
+### Fixed
+
+- Made CLI help and setup output safe on Windows terminals using legacy code pages.
+- Replaced decorative Unicode in CLI output with ASCII-safe text so `ca-radar --help`
+  does not crash when stdout is encoded as `cp1252`.
+
 ## [0.1.0] — 2025-06-01
 
 Initial public release.
@@ -63,4 +71,5 @@ Initial public release.
 - Sign-in risk features require Entra ID P2; workload identity CA requires Entra Workload ID Premium
 - `scan-all` scans tenants sequentially to avoid Graph rate limiting
 
+[0.1.1]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.1.1
 [0.1.0]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.1.0
