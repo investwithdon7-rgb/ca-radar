@@ -1,0 +1,82 @@
+# CISA Secure Cloud Business Applications (SCuBA) — Microsoft 365 Entra ID baseline
+# Source : https://www.cisa.gov/resources-tools/services/secure-cloud-business-applications
+# Version: SCuBA M365 Security Configuration Baseline for AAD v1.0 (2024-08)
+#
+# Only the Conditional Access-relevant controls are listed here.
+# Controls are marked "covered" when ca-radar emits NO finding for the
+# corresponding finding_ids.  An empty findings list means the control
+# is structural/informational (always counted as covered).
+
+framework: SCuBA
+version: "1.0"
+url: "https://www.cisa.gov/resources-tools/services/secure-cloud-business-applications-scuba-project"
+controls:
+
+  - id: MS.AAD.1.1v1
+    title: "Legacy authentication SHALL be blocked"
+    description: >
+      Conditional Access policies SHALL block all legacy authentication flows,
+      including Exchange ActiveSync and other legacy clients.
+    finding_ids:
+      - CA-LEGACY-001
+      - CA-LEGACY-002
+
+  - id: MS.AAD.2.1v1
+    title: "MFA SHALL be required for all users"
+    description: >
+      MFA SHALL be enforced for all users via Conditional Access policy.
+      Report-only mode does not satisfy this requirement.
+    finding_ids:
+      - CA-MFA-001
+
+  - id: MS.AAD.2.3v1
+    title: "Phishing-resistant MFA SHALL be required for highly privileged roles"
+    description: >
+      Phishing-resistant MFA (FIDO2, Windows Hello for Business, or certificate-based
+      authentication) SHALL be required for all privileged administrator accounts
+      via Conditional Access authentication-strength policy.
+    finding_ids:
+      - CA-MFA-002
+      - CA-ADMIN-001
+
+  - id: MS.AAD.2.4v1
+    title: "MFA SHALL NOT have exclusion groups for highly privileged roles"
+    description: >
+      There SHALL be no exclusion groups added to MFA Conditional Access policies
+      for privileged roles.  Large MFA exclusion groups are a significant risk.
+    finding_ids:
+      - CA-EXCL-002
+
+  - id: MS.AAD.3.1v1
+    title: "Sign-in risk-based Conditional Access policies SHALL be implemented"
+    description: >
+      A Conditional Access policy SHALL be configured to require MFA when the
+      sign-in risk level is medium or high (requires Entra ID P2).
+    finding_ids:
+      - CA-RISK-001
+
+  - id: MS.AAD.3.2v1
+    title: "User risk-based Conditional Access policies SHALL be implemented"
+    description: >
+      A Conditional Access policy SHALL be configured to require a secure password
+      change when user risk level is high (requires Entra ID P2).
+    finding_ids:
+      - CA-RISK-002
+
+  - id: MS.AAD.3.3v1
+    title: "Sign-in frequency SHALL be limited for highly privileged roles"
+    description: >
+      A Conditional Access session policy SHALL enforce sign-in frequency limits
+      for privileged administrator roles to reduce persistent session risk.
+    finding_ids:
+      - CA-SESS-001
+
+  - id: MS.AAD.6.1v1
+    title: "A break-glass account SHALL be implemented"
+    description: >
+      At least one break-glass (emergency access) account SHALL exist that is
+      excluded from all Conditional Access policies.  The account SHALL use a
+      phishing-resistant authentication method.
+    finding_ids:
+      - CA-BG-001
+      - CA-BG-002

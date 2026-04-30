@@ -1,0 +1,70 @@
+# CIS Microsoft 365 Foundations Benchmark — Identity & Access Management controls
+# Source : https://www.cisecurity.org/benchmark/microsoft_365
+# Version: CIS Microsoft 365 Foundations Benchmark v3.1.0 (2024)
+#
+# Only controls directly addressable by Conditional Access policy are listed.
+# Controls are marked "covered" when ca-radar emits NO finding for the
+# corresponding finding_ids.
+
+framework: CIS
+version: "3.1.0"
+url: "https://www.cisecurity.org/benchmark/microsoft_365"
+controls:
+
+  - id: "1.1.1"
+    title: "Ensure that 'Allow users to remember multi-factor authentication on devices they trust' is Disabled"
+    description: >
+      Legacy authentication protocols that do not support MFA SHALL be blocked
+      via Conditional Access policy to prevent credential-based attacks.
+    finding_ids:
+      - CA-LEGACY-001
+      - CA-LEGACY-002
+
+  - id: "1.2.1"
+    title: "Ensure that multi-factor authentication is enabled for all users in administrative roles"
+    description: >
+      Multi-factor authentication SHALL be required for all users via Conditional
+      Access policy.
+    finding_ids:
+      - CA-MFA-001
+
+  - id: "1.2.3"
+    title: "Ensure that phishing-resistant MFA is required for highly privileged roles"
+    description: >
+      Phishing-resistant MFA SHALL be enforced for highly privileged administrator
+      accounts using authentication-strength Conditional Access policies.
+    finding_ids:
+      - CA-MFA-002
+      - CA-ADMIN-001
+
+  - id: "1.2.4"
+    title: "Ensure MFA exclusion lists are properly managed"
+    description: >
+      MFA Conditional Access exclusion groups SHALL be reviewed regularly.
+      Large exclusion groups represent a significant attack surface.
+    finding_ids:
+      - CA-EXCL-002
+
+  - id: "1.3.1"
+    title: "Ensure sign-in risk-based Conditional Access policies are in place"
+    description: >
+      A Conditional Access policy SHALL require MFA or block sign-in when
+      sign-in risk is detected at medium or high level.
+    finding_ids:
+      - CA-RISK-001
+
+  - id: "1.3.2"
+    title: "Ensure user risk-based Conditional Access policies are in place"
+    description: >
+      A Conditional Access policy SHALL require a secure password change when
+      user risk is detected at high level.
+    finding_ids:
+      - CA-RISK-002
+
+  - id: "1.5.1"
+    title: "Ensure privileged account sign-in frequency is limited"
+    description: >
+      Sign-in frequency SHALL be enforced via Conditional Access session controls
+      for privileged administrator roles.
+    finding_ids:
+      - CA-SESS-001

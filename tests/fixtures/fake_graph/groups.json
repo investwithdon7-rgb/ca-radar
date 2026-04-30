@@ -1,0 +1,20 @@
+[
+  {
+    "id": "bg-group-001",
+    "displayName": "Break Glass Accounts",
+    "groupTypes": [],
+    "securityEnabled": true,
+    "mailEnabled": false,
+    "memberIds": ["user-breakglass"],
+    "transitiveeMemberIds": []
+  },
+  {
+    "id": "grp-mfa-excl",
+    "displayName": "MFA Exclusions",
+    "groupTypes": [],
+    "securityEnabled": true,
+    "mailEnabled": false,
+    "memberIds": ["user-alice", "user-bob"],
+    "transitiveMemberIds": ["user-alice", "user-bob"]
+  }
+]

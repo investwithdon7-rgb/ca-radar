@@ -1,0 +1,39 @@
+name: Nightly scan example
+
+# Example workflow for MSPs running ca-radar against a tenant on a schedule.
+# Copy this to your own repo and fill in the secrets.
+on:
+  schedule:
+    - cron: "0 2 * * *"   # 02:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  scan:
+    name: Scan tenant
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install ca-radar
+        run: uv tool install ca-radar
+
+      - name: Run scan
+        env:
+          CA_RADAR_TENANT: ${{ secrets.CA_RADAR_TENANT }}
+          CA_RADAR_CLIENT_ID: ${{ secrets.CA_RADAR_CLIENT_ID }}
+          CA_RADAR_CERT_PATH: ./cert.pem
+        run: |
+          echo "${{ secrets.CA_RADAR_CERT_B64 }}" | base64 -d > cert.pem
+          ca-radar scan --tenant "$CA_RADAR_TENANT" --auth app --out ./reports
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ca-radar-report
+          path: ./reports/
+          retention-days: 30

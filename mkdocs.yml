@@ -1,0 +1,75 @@
+site_name: ca-radar
+site_description: Conditional Access Gap Analyser & Visualiser for Microsoft 365 / Entra ID
+site_url: https://tekdruid.github.io/ca-radar
+repo_url: https://github.com/tekdruid/ca-radar
+repo_name: tekdruid/ca-radar
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started.md
+    - First scan: first-scan.md
+  - User Guide:
+    - Architecture: architecture.md
+    - MSP Portfolio mode: scan-all.md
+    - HTML Report: html-report.md
+    - Exports: exports.md
+  - Reference:
+    - Findings: findings-reference.md
+    - Baseline alignment: baseline-alignment.md
+    - CLI reference: cli-reference.md
+  - Contributing: contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/tekdruid/ca-radar
+  version:
+    provider: mike

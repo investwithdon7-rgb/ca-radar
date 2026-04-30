@@ -1,0 +1,32 @@
+[
+  {
+    "id": "user-alice",
+    "userPrincipalName": "alice@contoso.com",
+    "displayName": "Alice Smith",
+    "accountEnabled": true,
+    "userType": "Member",
+    "createdDateTime": "2022-03-01T10:00:00Z",
+    "signInActivity": {
+      "lastSignInDateTime": "2024-04-01T08:00:00Z",
+      "lastSignInRequestId": "req-alice-001"
+    }
+  },
+  {
+    "id": "user-bob",
+    "userPrincipalName": "bob@contoso.com",
+    "displayName": "Bob Jones",
+    "accountEnabled": true,
+    "userType": "Member",
+    "createdDateTime": "2021-06-15T09:00:00Z",
+    "signInActivity": null
+  },
+  {
+    "id": "user-breakglass",
+    "userPrincipalName": "breakglass@contoso.com",
+    "displayName": "Break Glass",
+    "accountEnabled": true,
+    "userType": "Member",
+    "createdDateTime": "2020-01-01T00:00:00Z",
+    "signInActivity": null
+  }
+]

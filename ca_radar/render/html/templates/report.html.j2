@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ca-radar — {{ tenant_id }}</title>
+  <style>
+    /* ── Reset & base ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #f8f9fb;
+      --surface:   #ffffff;
+      --border:    #e2e6ea;
+      --text:      #1a1d23;
+      --text-muted:#6b7280;
+      --accent:    #2563eb;
+      --critical:  #dc2626;
+      --high:      #d97706;
+      --medium:    #ca8a04;
+      --low:       #2563eb;
+      --info:      #6b7280;
+      --ok:        #16a34a;
+      --radius:    8px;
+      --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-lg: 0 4px 16px rgba(0,0,0,.10);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: "SF Mono", "Fira Code", Consolas, monospace;
+      font-size: 12px;
+    }
+    pre {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 0 24px 64px; }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 14px 0;
+    }
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+    .brand span { color: var(--text-muted); font-weight: 400; }
+    .header-meta { flex: 1; }
+    .header-meta h1 { font-size: 15px; font-weight: 600; }
+    .header-meta p  { font-size: 12px; color: var(--text-muted); }
+    .score-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 16px;
+      flex-shrink: 0;
+    }
+    .score-badge .score-num {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .score-badge .score-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── Summary cards ───────────────────────────────────────────────── */
+    .summary-section { padding: 28px 0 0; }
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    .sev-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: box-shadow .15s, border-color .15s;
+      user-select: none;
+    }
+    .sev-card:hover   { box-shadow: var(--shadow-lg); }
+    .sev-card.active  { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+    .sev-card .count  { font-size: 28px; font-weight: 700; line-height: 1; }
+    .sev-card .label  { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
+    .sev-card.all .count  { color: var(--text); }
+    .sev-card.critical .count { color: var(--critical); }
+    .sev-card.high    .count  { color: var(--high); }
+    .sev-card.medium  .count  { color: var(--medium); }
+    .sev-card.low     .count  { color: var(--low); }
+    .sev-card.info    .count  { color: var(--info); }
+
+    /* ── Graph section ───────────────────────────────────────────────── */
+    .graph-section {
+      margin-top: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .section-header h2 { font-size: 14px; font-weight: 600; }
+    .section-header .toggle-icon { color: var(--text-muted); font-size: 12px; }
+    .section-body { padding: 0; }
+    .section-body.collapsed { display: none; }
+    #policy-graph-svg {
+      width: 100%;
+      height: 480px;
+      display: block;
+    }
+    .graph-legend {
+      display: flex;
+      gap: 16px;
+      padding: 10px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+    .legend-dot  { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── Findings table ──────────────────────────────────────────────── */
+    .findings-section { margin-top: 28px; }
+    .findings-section h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .empty-state {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px;
+      text-align: center;
+      color: var(--ok);
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .findings-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--bg);
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .1s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover   { background: var(--bg); }
+    tbody tr.active  { background: #eff6ff; }
+    tbody td { padding: 11px 16px; vertical-align: middle; }
+    .finding-id   { font-family: monospace; font-size: 12px; font-weight: 600; color: var(--accent); }
+    .sev-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .sev-pill.critical { background:#fef2f2; color:var(--critical); }
+    .sev-pill.high     { background:#fffbeb; color:var(--high); }
+    .sev-pill.medium   { background:#fefce8; color:var(--medium); }
+    .sev-pill.low      { background:#eff6ff; color:var(--low); }
+    .sev-pill.info     { background:#f9fafb; color:var(--info); }
+    .conf-bar {
+      display: inline-block;
+      width: 48px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+    }
+    .finding-title { max-width: 440px; }
+    td.affected { text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    td.hidden-row { display: none; }
+
+    /* ── Detail card ─────────────────────────────────────────────────── */
+    .detail-row td { padding: 0; }
+    .detail-card {
+      border-top: 2px solid var(--accent);
+      background: #f8faff;
+      padding: 24px 28px;
+    }
+    .detail-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+    .detail-block h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); margin-bottom: 8px; }
+    .detail-block p  { font-size: 13px; line-height: 1.6; }
+    .baseline-list { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .baseline-tag {
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .snippet-tabs { display: flex; gap: 4px; margin-bottom: 0; }
+    .snippet-tab {
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: var(--bg);
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      color: var(--text-muted);
+    }
+    .snippet-tab.active { background: var(--surface); color: var(--text); }
+    .snippet-pane { display: none; }
+    .snippet-pane.active { display: block; }
+    .references { list-style: none; margin-top: 6px; }
+    .references li::before { content: "↗ "; color: var(--accent); }
+    .evidence-json { font-size: 11px; max-height: 200px; }
+    .principals-list { font-family: monospace; font-size: 11px; max-height: 120px; overflow-y: auto; }
+    .principals-list span { display: block; color: var(--text-muted); }
+
+    /* ── Baseline alignment section ─────────────────────────────────── */
+    .alignment-section { margin-top: 28px; }
+    .alignment-section h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .alignment-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .alignment-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .alignment-card-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .alignment-card-header .fw-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .alignment-card-header .fw-version {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .alignment-pct {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .alignment-bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .alignment-bar-fill { height: 100%; border-radius: 3px; }
+    .alignment-detail {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .alignment-detail a { color: var(--accent); font-size: 10px; }
+
+    /* ── Footer ─────────────────────────────────────────────────────── */
+    .footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── D3 graph node/link styles ───────────────────────────────────── */
+    .node circle, .node rect, .node polygon { stroke: #fff; stroke-width: 1.5px; cursor: pointer; transition: opacity .2s; }
+    .node text { font-size: 10px; fill: var(--text); pointer-events: none; }
+    .link { stroke: #cbd5e1; stroke-opacity: .6; fill: none; }
+    .link.member_of    { stroke: #93c5fd; }
+    .link.has_role     { stroke: #c4b5fd; }
+    .link.includes_user, .link.includes_group, .link.includes_role { stroke: #86efac; stroke-dasharray: none; }
+    .link.excludes_user, .link.excludes_group, .link.excludes_role { stroke: #fca5a5; stroke-dasharray: 4 2; }
+    .node.dimmed circle, .node.dimmed rect, .node.dimmed polygon { opacity: 0.15; }
+    .node.dimmed text  { opacity: 0.15; }
+    .link.dimmed       { opacity: 0.06; }
+    .graph-tooltip {
+      position: absolute;
+      background: rgba(15,23,42,.88);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 200;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="header-inner">
+    <div class="brand">ca<span>-</span>radar</div>
+    <div class="header-meta">
+      <h1>{{ tenant_id }}{% if redacted %} <span style="font-size:11px;color:var(--text-muted);font-weight:400">(redacted)</span>{% endif %}</h1>
+      <p>Scanned {{ captured_at }}{% if tool_version %} &nbsp;·&nbsp; v{{ tool_version }}{% endif %}</p>
+    </div>
+    {% set sc = posture_score %}
+    {% if sc >= 80 %}{% set sc_col = "#16a34a" %}
+    {% elif sc >= 50 %}{% set sc_col = "#d97706" %}
+    {% else %}{% set sc_col = "#dc2626" %}{% endif %}
+    <div class="score-badge">
+      <span class="score-num" style="color:{{ sc_col }}">{{ posture_score }}</span>
+      <span class="score-label">/ 100 posture</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main content ─────────────────────────────────────────────────── -->
+<div class="page">
+
+  <!-- Summary cards -->
+  <div class="summary-section">
+    <div class="summary-cards">
+      <div class="sev-card all active" onclick="filterSeverity('all', this)">
+        <span class="count">{{ findings|length }}</span>
+        <span class="label">All findings</span>
+      </div>
+      <div class="sev-card critical" onclick="filterSeverity('critical', this)">
+        <span class="count">{{ sev_counts.critical }}</span>
+        <span class="label">🔴 Critical</span>
+      </div>
+      <div class="sev-card high" onclick="filterSeverity('high', this)">
+        <span class="count">{{ sev_counts.high }}</span>
+        <span class="label">🟠 High</span>
+      </div>
+      <div class="sev-card medium" onclick="filterSeverity('medium', this)">
+        <span class="count">{{ sev_counts.medium }}</span>
+        <span class="label">🟡 Medium</span>
+      </div>
+      <div class="sev-card low" onclick="filterSeverity('low', this)">
+        <span class="count">{{ sev_counts.low }}</span>
+        <span class="label">🔵 Low</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Policy graph -->
+  <div class="graph-section">
+    <div class="section-header" onclick="toggleSection('graph-body', this)">
+      <h2>Policy Graph <span style="font-weight:400;color:var(--text-muted);font-size:12px">(click node to highlight)</span></h2>
+      <span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body" id="graph-body">
+      <svg id="policy-graph-svg"></svg>
+      <div class="graph-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> User</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Group</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div> Role</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Policy</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div> Application</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> Service principal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Findings -->
+  <div class="findings-section">
+    <h2>Findings</h2>
+    {% if not findings %}
+    <div class="empty-state">✓ No findings — posture score 100/100</div>
+    {% else %}
+    <div class="findings-table-wrap">
+      <table id="findings-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Severity</th>
+            <th>Title</th>
+            <th style="text-align:right">Affected</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in findings %}
+          <tr class="finding-row" data-sev="{{ f.severity.value }}" data-id="{{ f.id }}"
+              onclick="toggleDetail('{{ f.id }}', this)">
+            <td><span class="finding-id">{{ f.id }}</span></td>
+            <td>
+              <span class="sev-pill {{ f.severity.value }}">
+                {{ f.severity.emoji }} {{ f.severity.value }}
+              </span>
+            </td>
+            <td class="finding-title">{{ f.title }}</td>
+            <td class="affected">{{ f.affected_principals|length if f.affected_principals else "—" }}</td>
+            <td>
+              <div class="conf-bar" title="{{ (f.confidence * 100)|int }}%">
+                <div class="conf-bar-fill" style="width:{{ (f.confidence * 100)|int }}%"></div>
+              </div>
+            </td>
+          </tr>
+          <tr class="detail-row" id="detail-{{ f.id }}" style="display:none">
+            <td colspan="5">
+              <div class="detail-card">
+                <h3>{{ f.title }}</h3>
+                <p style="color:var(--text-muted);font-size:13px">{{ f.summary }}</p>
+
+                <div class="detail-grid">
+                  <!-- Why it matters -->
+                  <div class="detail-block" style="grid-column:1/-1">
+                    <h4>Why it matters</h4>
+                    <p>{{ f.why_it_matters }}</p>
+                  </div>
+
+                  <!-- Remediation -->
+                  {% if f.remediation %}
+                  <div class="detail-block">
+                    <h4>Remediation</h4>
+                    <p style="margin-bottom:10px">{{ f.remediation.description }}</p>
+                    {% if f.remediation.snippets %}
+                    <div class="snippet-tabs" id="tabs-{{ f.id }}">
+                      {% for label, _ in f.remediation.snippets %}
+                      <div class="snippet-tab{% if loop.first %} active{% endif %}"
+                           onclick="showSnippet('{{ f.id }}', {{ loop.index0 }}, this)">{{ label }}</div>
+                      {% endfor %}
+                    </div>
+                    {% for label, code in f.remediation.snippets %}
+                    <div class="snippet-pane{% if loop.first %} active{% endif %}" id="snippet-{{ f.id }}-{{ loop.index0 }}">
+                      <pre>{{ code }}</pre>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% if f.remediation.references %}
+                    <ul class="references" style="margin-top:10px">
+                      {% for ref in f.remediation.references %}
+                      <li><a href="{{ ref }}" target="_blank" rel="noopener">{{ ref }}</a></li>
+                      {% endfor %}
+                    </ul>
+                    {% endif %}
+                  </div>
+                  {% endif %}
+
+                  <!-- Baselines & Evidence -->
+                  <div class="detail-block">
+                    {% if f.baselines %}
+                    <h4>Baseline references</h4>
+                    <ul class="baseline-list" style="margin-bottom:16px">
+                      {% for b in f.baselines %}
+                      <li class="baseline-tag" title="{{ b.title }}">{{ b.framework }} {{ b.control_id }}</li>
+                      {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <h4>Evidence</h4>
+                    <pre class="evidence-json">{{ f.evidence | tojson(indent=2) }}</pre>
+
+                    {% if f.affected_principals %}
+                    <h4 style="margin-top:12px">Affected principals ({{ f.affected_principals|length }})</h4>
+                    <div class="principals-list">
+                      {% for pid in f.affected_principals[:30] %}
+                      <span>{{ pid }}</span>
+                      {% endfor %}
+                      {% if f.affected_principals|length > 30 %}
+                      <span style="color:var(--accent)">… and {{ f.affected_principals|length - 30 }} more</span>
+                      {% endif %}
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Baseline alignment -->
+  {% if alignment %}
+  <div class="alignment-section">
+    <h2>Baseline Alignment</h2>
+    <div class="alignment-cards">
+      {% for fw_name, ar in alignment.items() %}
+      {% if ar.pct >= 80 %}{% set bar_col = "var(--ok)" %}
+      {% elif ar.pct >= 50 %}{% set bar_col = "var(--high)" %}
+      {% else %}{% set bar_col = "var(--critical)" %}{% endif %}
+      {% if ar.pct >= 80 %}{% set pct_col = "var(--ok)" %}
+      {% elif ar.pct >= 50 %}{% set pct_col = "var(--high)" %}
+      {% else %}{% set pct_col = "var(--critical)" %}{% endif %}
+      <div class="alignment-card">
+        <div class="alignment-card-header">
+          <span class="fw-name">{{ ar.framework }}</span>
+          <span class="fw-version">v{{ ar.version }}</span>
+        </div>
+        <div class="alignment-pct" style="color:{{ pct_col }}">{{ ar.pct }}%</div>
+        <div class="alignment-bar-track">
+          <div class="alignment-bar-fill"
+               style="width:{{ ar.pct }}%;background:{{ bar_col }}"></div>
+        </div>
+        <div class="alignment-detail">
+          {{ ar.passing }} / {{ ar.total_controls }} controls passing
+          &nbsp;·&nbsp;
+          <span style="color:var(--critical)">{{ ar.failing }} failing</span>
+          &nbsp;·&nbsp;
+          <a href="{{ ar.url }}" target="_blank" rel="noopener">benchmark ↗</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if analyser_errors %}
+  <!-- Analyser errors -->
+  <div style="margin-top:24px;padding:16px 20px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius)">
+    <strong style="color:var(--critical)">Analyser errors</strong>
+    {% for name, msg in analyser_errors.items() %}
+    <p style="font-size:12px;margin-top:4px;color:var(--text-muted)"><code>{{ name }}</code>: {{ msg }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="footer">
+    Generated by <strong>ca-radar</strong>{% if tool_version %} v{{ tool_version }}{% endif %} &nbsp;·&nbsp;
+    Read-only analysis — no data written to tenant &nbsp;·&nbsp;
+    {% if redacted %}UPNs are hashed{% else %}<span style="color:var(--high)">⚠ UPNs not redacted</span>{% endif %}
+  </div>
+</div>
+
+<!-- ── Graph tooltip ─────────────────────────────────────────────────── -->
+<div class="graph-tooltip" id="graph-tooltip" style="display:none"></div>
+
+<!-- ── D3 v7 ─────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"
+        onerror="document.getElementById('policy-graph-svg').innerHTML='<text x=20 y=30 style=fill:#6b7280;font-size:13px>Graph unavailable (D3 CDN unreachable)</text>'">
+</script>
+
+<!-- ── Embedded data ─────────────────────────────────────────────────── -->
+<script>
+const GRAPH_DATA   = {{ graph_json | safe }};
+const FINDINGS     = {{ findings_json | safe }};
+</script>
+
+<!-- ── Interaction JS ────────────────────────────────────────────────── -->
+<script>
+/* ─── Filter by severity ───────────────────────────────────────────── */
+function filterSeverity(sev, card) {
+  document.querySelectorAll('.sev-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  document.querySelectorAll('.finding-row').forEach(row => {
+    const match = sev === 'all' || row.dataset.sev === sev;
+    row.style.display = match ? '' : 'none';
+    const detail = document.getElementById('detail-' + row.dataset.id);
+    if (detail && !match) detail.style.display = 'none';
+  });
+}
+
+/* ─── Toggle detail card ───────────────────────────────────────────── */
+function toggleDetail(id, row) {
+  const detail = document.getElementById('detail-' + id);
+  const isOpen = detail.style.display !== 'none';
+  // Close all
+  document.querySelectorAll('.detail-row').forEach(r => r.style.display = 'none');
+  document.querySelectorAll('.finding-row').forEach(r => r.classList.remove('active'));
+  if (!isOpen) {
+    detail.style.display = '';
+    row.classList.add('active');
+  }
+}
+
+/* ─── Snippet tabs ─────────────────────────────────────────────────── */
+function showSnippet(fid, idx, tab) {
+  document.querySelectorAll('#tabs-' + fid + ' .snippet-tab').forEach(t => t.classList.remove('active'));
+  const container = document.getElementById('detail-' + fid);
+  container.querySelectorAll('.snippet-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  const pane = document.getElementById('snippet-' + fid + '-' + idx);
+  if (pane) pane.classList.add('active');
+}
+
+/* ─── Section toggle ───────────────────────────────────────────────── */
+function toggleSection(bodyId, header) {
+  const body = document.getElementById(bodyId);
+  const icon = header.querySelector('.toggle-icon');
+  const collapsed = body.classList.toggle('collapsed');
+  icon.textContent = collapsed ? '▼' : '▲';
+}
+
+/* ─── D3 Force Graph ───────────────────────────────────────────────── */
+(function initGraph() {
+  if (typeof d3 === 'undefined') return;
+
+  const nodes = (GRAPH_DATA.nodes || []).map(d => Object.assign({}, d));
+  const links = (GRAPH_DATA.links || []).map(d => Object.assign({}, d));
+
+  if (!nodes.length) {
+    document.getElementById('policy-graph-svg').innerHTML =
+      '<text x="20" y="30" style="fill:#6b7280;font-size:13px">No graph data</text>';
+    return;
+  }
+
+  const svg    = d3.select('#policy-graph-svg');
+  const width  = svg.node().getBoundingClientRect().width || 960;
+  const height = 480;
+  svg.attr('viewBox', `0 0 ${width} ${height}`);
+
+  const NODE_COLOUR = {
+    user:               '#3b82f6',
+    group:              '#10b981',
+    role:               '#8b5cf6',
+    policy:             '#f59e0b',
+    application:        '#ec4899',
+    service_principal:  '#6b7280',
+    unknown:            '#94a3b8',
+  };
+
+  const tooltip = document.getElementById('graph-tooltip');
+
+  // Zoom container
+  const g = svg.append('g');
+  svg.call(d3.zoom().scaleExtent([.2, 4])
+    .on('zoom', e => g.attr('transform', e.transform)));
+
+  // Links
+  const link = g.selectAll('.link')
+    .data(links)
+    .join('line')
+    .attr('class', d => 'link ' + (d.rel || ''))
+    .attr('stroke-width', 1.2)
+    .attr('marker-end', null);
+
+  // Node groups
+  const node = g.selectAll('.node')
+    .data(nodes)
+    .join('g')
+    .attr('class', 'node')
+    .call(d3.drag()
+      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag',  (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end',   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+  // Shape by type
+  node.each(function(d) {
+    const el = d3.select(this);
+    const col = NODE_COLOUR[d.node_type] || NODE_COLOUR.unknown;
+    if (d.node_type === 'policy') {
+      el.append('rect').attr('x', -18).attr('y', -9).attr('width', 36).attr('height', 18)
+        .attr('rx', 4).attr('fill', col);
+    } else if (d.node_type === 'group') {
+      el.append('polygon').attr('points', '0,-11 9.5,5.5 -9.5,5.5').attr('fill', col);
+    } else {
+      el.append('circle').attr('r', 9).attr('fill', col);
+    }
+  });
+
+  node.append('text')
+    .attr('dy', 22)
+    .attr('text-anchor', 'middle')
+    .text(d => {
+      const lbl = d.label || d.id || '';
+      return lbl.length > 20 ? lbl.slice(0, 18) + '…' : lbl;
+    });
+
+  // Tooltip
+  node.on('mouseover', (e, d) => {
+    tooltip.style.display = 'block';
+    tooltip.textContent   = `[${d.node_type}] ${d.label || d.id}`;
+  })
+  .on('mousemove', e => {
+    tooltip.style.left = (e.pageX + 12) + 'px';
+    tooltip.style.top  = (e.pageY - 8)  + 'px';
+  })
+  .on('mouseout', () => { tooltip.style.display = 'none'; });
+
+  // Click — highlight neighbourhood
+  let highlighted = null;
+  node.on('click', (e, d) => {
+    e.stopPropagation();
+    if (highlighted === d.id) {
+      // Deselect
+      highlighted = null;
+      node.classed('dimmed', false);
+      link.classed('dimmed', false);
+      return;
+    }
+    highlighted = d.id;
+    const neighbours = new Set([d.id]);
+    links.forEach(l => {
+      if ((l.source.id || l.source) === d.id) neighbours.add(l.target.id || l.target);
+      if ((l.target.id || l.target) === d.id) neighbours.add(l.source.id || l.source);
+    });
+    node.classed('dimmed', n => !neighbours.has(n.id));
+    link.classed('dimmed', l => {
+      const s = l.source.id || l.source, t = l.target.id || l.target;
+      return s !== d.id && t !== d.id;
+    });
+  });
+  svg.on('click', () => {
+    highlighted = null;
+    node.classed('dimmed', false);
+    link.classed('dimmed', false);
+  });
+
+  // Simulation
+  const sim = d3.forceSimulation(nodes)
+    .force('link',   d3.forceLink(links).id(d => d.id).distance(80).strength(.4))
+    .force('charge', d3.forceManyBody().strength(-200))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide(18))
+    .on('tick', () => {
+      link
+        .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+})();
+</script>
+
+</body>
+</html>

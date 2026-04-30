@@ -1,0 +1,12 @@
+[
+  {
+    "id": "sp-001",
+    "displayName": "Contoso App",
+    "appId": "app-id-001",
+    "servicePrincipalType": "Application",
+    "accountEnabled": true,
+    "tags": [],
+    "appRoleAssignments": [],
+    "oauth2PermissionGrants": []
+  }
+]

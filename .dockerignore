@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Tests
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Development
+.ruff_cache/
+.mypy_cache/
+*.iml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs
+docs/
+mkdocs.yml
+site/
+
+# Snapshots (mount as volume at runtime)
+snapshot/
+
+# CI/CD
+.github/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
