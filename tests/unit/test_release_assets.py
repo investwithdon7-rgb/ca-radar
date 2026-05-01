@@ -7,6 +7,7 @@ are accidentally deleted or renamed.
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -179,6 +180,18 @@ class TestChangelog:
     def test_added_section_present(self):
         content = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
         assert "### Added" in content
+
+
+# ===========================================================================
+# Package metadata
+# ===========================================================================
+
+
+class TestPackageMetadata:
+    def test_runtime_dependencies_do_not_include_unused_msgraph_sdk(self):
+        pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        dependencies = pyproject["project"]["dependencies"]
+        assert not any(dep.lower().startswith("msgraph-sdk") for dep in dependencies)
 
 
 # ===========================================================================
