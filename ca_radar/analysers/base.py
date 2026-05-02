@@ -106,6 +106,9 @@ class Finding:
     baselines: list[BaselineRef] = field(default_factory=list)
     remediation: Remediation | None = None
     confidence: float = 1.0  # 0.0–1.0; < 1.0 = uncertain
+    owner: dict[str, Any] = field(default_factory=dict)
+    exception: dict[str, Any] = field(default_factory=dict)
+    priority: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -128,6 +131,9 @@ class Finding:
             if self.remediation
             else None,
             "confidence": self.confidence,
+            "owner": self.owner,
+            "exception": self.exception,
+            "priority": self.priority,
         }
 
 

@@ -55,6 +55,8 @@ def test_scan_help() -> None:
     assert result.exit_code == 0
     out = _plain(result.output)
     assert "--tenant" in out
+    assert "--owners" in out
+    assert "--exceptions" in out
     # --tenant is now optional (reads from saved config)
     assert "optional" in out.lower() or "config" in out.lower()
 
@@ -62,7 +64,10 @@ def test_scan_help() -> None:
 def test_scan_all_help() -> None:
     result = runner.invoke(app, ["scan-all", "--help"])
     assert result.exit_code == 0
-    assert "--tenants" in _plain(result.output)
+    out = _plain(result.output)
+    assert "--tenants" in out
+    assert "--owners" in out
+    assert "--exceptions" in out
 
 
 def test_setup_help() -> None:

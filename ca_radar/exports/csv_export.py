@@ -15,6 +15,12 @@ baselines        Pipe-delimited "FRAMEWORK:control_id" pairs
 summary          Single-sentence summary (quotes stripped to keep CSV clean)
 tenant_id        Tenant identifier passed at export time
 captured_at      ISO-8601 snapshot timestamp
+owner            Pipe-delimited owner names resolved from optional owner mapping
+owner_source     principal | finding | default | unknown
+exception_status none | accepted_risk | expired | custom status
+exception_expires ISO date for the matched exception, when present
+priority_score   0-100 remediation priority score
+priority_band    urgent | high | medium | low
 """
 
 from __future__ import annotations
@@ -35,6 +41,12 @@ _FIELDS = [
     "summary",
     "tenant_id",
     "captured_at",
+    "owner",
+    "owner_source",
+    "exception_status",
+    "exception_expires",
+    "priority_score",
+    "priority_band",
 ]
 
 
@@ -73,6 +85,9 @@ def export_csv(
         baselines = (
             "|".join(f"{b.framework}:{b.control_id}" for b in f.baselines) if f.baselines else ""
         )
+        owner = f.owner or {}
+        exception = f.exception or {}
+        priority = f.priority or {}
 
         writer.writerow(
             {
@@ -85,7 +100,19 @@ def export_csv(
                 "summary": f.summary.replace("\n", " "),
                 "tenant_id": tenant_id,
                 "captured_at": captured_str,
+                "owner": _pipe_list(owner.get("names", [])),
+                "owner_source": str(owner.get("source", "")),
+                "exception_status": str(exception.get("status", "")),
+                "exception_expires": str(exception.get("expires", "")),
+                "priority_score": str(priority.get("score", "")),
+                "priority_band": str(priority.get("band", "")),
             }
         )
 
     return buf.getvalue()
+
+
+def _pipe_list(value: object) -> str:
+    if isinstance(value, list):
+        return "|".join(str(item) for item in value)
+    return str(value or "")

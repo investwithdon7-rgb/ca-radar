@@ -217,6 +217,24 @@
     .sev-pill.medium   { background:#fefce8; color:var(--medium); }
     .sev-pill.low      { background:#eff6ff; color:var(--low); }
     .sev-pill.info     { background:#f9fafb; color:var(--info); }
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .priority-pill.urgent { background:#fef2f2; color:var(--critical); }
+    .priority-pill.high   { background:#fffbeb; color:var(--high); }
+    .priority-pill.medium { background:#fefce8; color:var(--medium); }
+    .priority-pill.low    { background:#eff6ff; color:var(--low); }
+    .exception-pill.none  { background:#f8fafc; color:var(--text-muted); }
+    .exception-pill.expired { background:#fef2f2; color:var(--critical); }
+    .exception-pill.accepted_risk { background:#ecfdf5; color:var(--ok); }
     .conf-bar {
       display: inline-block;
       width: 48px;
@@ -438,7 +456,10 @@
           <tr>
             <th>ID</th>
             <th>Severity</th>
+            <th>Priority</th>
             <th>Title</th>
+            <th>Owner</th>
+            <th>Exception</th>
             <th style="text-align:right">Affected</th>
             <th>Confidence</th>
           </tr>
@@ -453,7 +474,23 @@
                 {{ f.severity.emoji }} {{ f.severity.value }}
               </span>
             </td>
+            {% set priority = f.priority if f.priority else {} %}
+            <td>
+              <span class="meta-pill priority-pill {{ priority.get('band', 'low') }}">
+                {{ priority.get('band', 'low') }} {{ priority.get('score', '') }}
+              </span>
+            </td>
             <td class="finding-title">{{ f.title }}</td>
+            {% set owner = f.owner if f.owner else {} %}
+            {% set owner_names = owner.get('names', []) %}
+            <td>{{ owner_names|join(', ') if owner_names else 'Unassigned' }}</td>
+            {% set exception = f.exception if f.exception else {} %}
+            {% set exception_status = exception.get('status', 'none') %}
+            <td>
+              <span class="meta-pill exception-pill {{ exception_status }}">
+                {{ exception_status }}
+              </span>
+            </td>
             <td class="affected">{{ f.affected_principals|length if f.affected_principals else "—" }}</td>
             <td>
               <div class="conf-bar" title="{{ (f.confidence * 100)|int }}%">
@@ -462,7 +499,7 @@
             </td>
           </tr>
           <tr class="detail-row" id="detail-{{ f.id }}" style="display:none">
-            <td colspan="5">
+            <td colspan="8">
               <div class="detail-card">
                 <h3>{{ f.title }}</h3>
                 <p style="color:var(--text-muted);font-size:13px">{{ f.summary }}</p>
@@ -472,6 +509,34 @@
                   <div class="detail-block" style="grid-column:1/-1">
                     <h4>Why it matters</h4>
                     <p>{{ f.why_it_matters }}</p>
+                  </div>
+
+                  <div class="detail-block">
+                    <h4>Ownership</h4>
+                    <p>
+                      Owner: <strong>{{ owner_names|join(', ') if owner_names else 'Unassigned' }}</strong><br>
+                      Source: {{ owner.get('source', 'none') }}
+                    </p>
+                  </div>
+
+                  <div class="detail-block">
+                    <h4>Priority and exception</h4>
+                    <p>
+                      Priority: <strong>{{ priority.get('band', 'low') }}</strong>
+                      ({{ priority.get('score', 0) }}/100)<br>
+                      Exception: {{ exception_status }}{% if exception.get('expires') %},
+                      expires {{ exception.get('expires') }}{% endif %}
+                    </p>
+                    {% if priority.get('factors') %}
+                    <ul class="baseline-list" style="margin-top:8px">
+                      {% for factor in priority.get('factors') %}
+                      <li class="baseline-tag">{{ factor }}</li>
+                      {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% if exception.get('reason') %}
+                    <p style="margin-top:8px;color:var(--text-muted)">Reason: {{ exception.get('reason') }}</p>
+                    {% endif %}
                   </div>
 
                   <!-- Remediation -->

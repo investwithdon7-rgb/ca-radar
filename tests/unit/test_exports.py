@@ -208,6 +208,19 @@ class TestExportJson:
         assert "Ünïcödé títle" in raw
         assert "tenánt.com" in raw
 
+    def test_enrichment_fields_serialised(self):
+        f = _make_finding(id="CA-SP-001")
+        f.owner = {"names": ["Platform Team"], "source": "finding"}
+        f.exception = {"status": "accepted_risk", "active": True}
+        f.priority = {"score": 67, "band": "high", "factors": ["high severity"]}
+
+        doc = json.loads(export_json(_result_with(f), _TENANT, _TS))
+        finding = doc["findings"][0]
+
+        assert finding["owner"]["names"] == ["Platform Team"]
+        assert finding["exception"]["status"] == "accepted_risk"
+        assert finding["priority"]["score"] == 67
+
 
 # ===========================================================================
 # CSV export
@@ -246,6 +259,12 @@ class TestExportCsv:
             "summary",
             "tenant_id",
             "captured_at",
+            "owner",
+            "owner_source",
+            "exception_status",
+            "exception_expires",
+            "priority_score",
+            "priority_band",
         ]
         for field in expected_fields:
             assert field in header_line
@@ -326,6 +345,21 @@ class TestExportCsv:
     def test_crlf_line_endings(self):
         raw = export_csv(_result_with(_make_finding()), _TENANT, _TS).lstrip("﻿")
         assert "\r\n" in raw
+
+    def test_enrichment_columns_serialised(self):
+        f = _make_finding(id="CA-SP-001", principals=["sp-1"])
+        f.owner = {"names": ["Platform Team"], "source": "principal"}
+        f.exception = {"status": "accepted_risk", "expires": "2026-12-31"}
+        f.priority = {"score": 42, "band": "medium"}
+
+        rows = self._parse(_result_with(f))
+
+        assert rows[0]["owner"] == "Platform Team"
+        assert rows[0]["owner_source"] == "principal"
+        assert rows[0]["exception_status"] == "accepted_risk"
+        assert rows[0]["exception_expires"] == "2026-12-31"
+        assert rows[0]["priority_score"] == "42"
+        assert rows[0]["priority_band"] == "medium"
 
 
 # ===========================================================================

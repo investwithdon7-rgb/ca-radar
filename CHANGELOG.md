@@ -6,6 +6,15 @@ versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.0] — 2026-05-02
+
+### Added
+
+- Added optional owner mapping with `--owners owners.yaml`.
+- Added exception tracking with `--exceptions exceptions.yaml`.
+- Added priority scoring and priority bands for remediation triage.
+- Included owner, exception, and priority metadata in HTML, JSON, CSV, and CLI output.
+
 ## [0.1.2] — 2026-05-01
 
 ### Fixed
@@ -78,6 +87,7 @@ Initial public release.
 - Sign-in risk features require Entra ID P2; workload identity CA requires Entra Workload ID Premium
 - `scan-all` scans tenants sequentially to avoid Graph rate limiting
 
+[0.2.0]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.2.0
 [0.1.2]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.1.2
 [0.1.1]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.1.1
 [0.1.0]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.1.0

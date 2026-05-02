@@ -19,6 +19,38 @@ ca-radar scan [OPTIONS]
 | `--no-redact` | — | off | Disable UPN hashing |
 | `--retain-signins` | — | off | Keep sign-in log samples |
 | `--concurrency` | — | `5` | Max parallel Graph requests |
+| `--owners` | — | — | Path to owner mapping YAML file |
+| `--exceptions` | — | — | Path to exception tracking YAML file |
+
+### Owner and exception enrichment
+
+Owner mapping adds accountable teams to the HTML report, `findings.json`, and `findings.csv`.
+
+```yaml
+owners:
+  principals:
+    user-or-service-principal-id: "Identity Team"
+  findings:
+    CA-SP-001: "Cloud Platform Team"
+  default: "Unassigned"
+```
+
+Exception tracking records accepted risk or temporary exceptions without hiding the finding. Active exceptions reduce priority; expired exceptions increase it.
+
+```yaml
+exceptions:
+  - finding_id: CA-BG-001
+    principal: breakglass@example.com
+    status: accepted_risk
+    reason: "Approved emergency access account"
+    owner: "Security Operations"
+    approved_by: "CISO"
+    expires: "2026-12-31"
+```
+
+```bash
+ca-radar scan --owners owners.yaml --exceptions exceptions.yaml
+```
 
 ---
 
@@ -36,6 +68,8 @@ ca-radar scan-all [OPTIONS]
 | `--out` / `-o` | `./snapshot` | Base directory for snapshots |
 | `--no-redact` | off | Disable UPN hashing for all tenants |
 | `--concurrency` | `5` | Max parallel Graph requests per tenant |
+| `--owners` | — | Path to owner mapping YAML file |
+| `--exceptions` | — | Path to exception tracking YAML file |
 
 ---
 

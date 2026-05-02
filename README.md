@@ -14,6 +14,7 @@
 - Renders a self-contained HTML report with a D3 policy graph, severity filters, and baseline alignment view
 - Exports `findings.json`, `findings.csv`, and `remediation.bicep` for Power BI / ITSM / IaC workflows
 - Tracks posture score over time via SQLite; supports MSP multi-tenant portfolio scanning
+- Adds optional owner mapping, exception tracking, and priority scoring to findings
 - **Never writes anything back to your tenant**
 
 ---
@@ -206,6 +207,8 @@ Options:
   --client-secret TEXT     Client secret (app auth)  [env: CA_RADAR_CLIENT_SECRET]
   --no-redact              Show real UPNs instead of hashes
   --concurrency INTEGER    Max parallel Graph requests  [default: 5]
+  --owners PATH            Owner mapping YAML file
+  --exceptions PATH        Exception tracking YAML file
 ```
 
 **Examples:**
@@ -220,11 +223,44 @@ ca-radar scan --tenant fabrikam.onmicrosoft.com
 # App auth with a certificate (unattended / CI)
 ca-radar scan --tenant contoso.com --auth app --cert-path /certs/ca-radar.pem
 
+# Add owner mapping, exception status, and priority scoring
+ca-radar scan --owners owners.yaml --exceptions exceptions.yaml
+
 # Environment variables (CI/CD pipelines)
 export CA_RADAR_CLIENT_ID=00000000-0000-0000-0000-000000000000
 export CA_RADAR_CLIENT_SECRET=your-secret
 ca-radar scan --tenant contoso.com --auth app
 ```
+
+### Owner mapping, exceptions, and priority
+
+Use `--owners` to attach accountable teams to findings. Principal keys can be user IDs, UPNs, group IDs, application IDs, or service principal IDs present in `affected_principals`; finding keys are stable finding IDs.
+
+```yaml
+owners:
+  principals:
+    guest.user_contoso.com#EXT#@tenant.onmicrosoft.com: "External Collaboration Owner"
+    00000000-0000-0000-0000-000000000000: "IAM Team"
+  findings:
+    CA-SP-001: "Cloud Platform Team"
+    CA-EXCL-001: "Identity Governance"
+  default: "Unassigned"
+```
+
+Use `--exceptions` to mark approved risks, temporary suppressions, and expired exceptions. Exceptions do not hide findings; they add status and adjust priority so reviewers can see the risk decision.
+
+```yaml
+exceptions:
+  - finding_id: CA-BG-001
+    principal: breakglass@example.com
+    status: accepted_risk
+    reason: "Approved emergency access account"
+    owner: "Security Operations"
+    approved_by: "CISO"
+    expires: "2026-12-31"
+```
+
+The HTML report, `findings.json`, and `findings.csv` include `owner`, `exception`, and `priority` fields.
 
 ### `ca-radar scan-all`
 
@@ -257,8 +293,8 @@ tenants:
 | File | Description |
 |---|---|
 | `report.html` | Self-contained interactive report — open in any browser |
-| `findings.json` | Versioned findings schema (v1) with posture score and severity summary |
-| `findings.csv` | UTF-8 BOM, pipe-delimited baselines — Excel and Power BI ready |
+| `findings.json` | Versioned findings schema (v1) with posture score, owners, exceptions, and priority |
+| `findings.csv` | UTF-8 BOM, pipe-delimited baselines plus owner, exception, and priority columns |
 | `remediation.bicep` | Microsoft Graph Bicep templates for remediation-eligible findings |
 | `snapshot.json` | Raw Graph data (UPNs SHA-256 hashed by default) |
 | `trend.db` | SQLite database tracking posture score history per tenant |

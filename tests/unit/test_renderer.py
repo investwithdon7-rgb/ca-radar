@@ -216,6 +216,18 @@ class TestRendererFindings:
         html = _render(findings)
         assert "70%" in html
 
+    def test_enrichment_metadata_appears(self):
+        finding = _make_finding("CA-SP-001", Severity.high, affected=1)
+        finding.owner = {"names": ["Platform Team"], "source": "principal"}
+        finding.exception = {"status": "accepted_risk", "expires": "2026-12-31"}
+        finding.priority = {"score": 66, "band": "high", "factors": ["service principal impact"]}
+
+        html = _render([finding])
+
+        assert "Platform Team" in html
+        assert "accepted_risk" in html
+        assert "service principal impact" in html
+
 
 # ---------------------------------------------------------------------------
 # Redaction flag

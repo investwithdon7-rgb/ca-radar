@@ -325,6 +325,16 @@ def scan(
         "--concurrency",
         help="Max parallel Graph requests. Reads from saved config if omitted.",
     ),
+    owners: str = typer.Option(
+        "",
+        "--owners",
+        help="Path to owner mapping YAML file.",
+    ),
+    exceptions: str = typer.Option(
+        "",
+        "--exceptions",
+        help="Path to exception tracking YAML file.",
+    ),
 ) -> None:
     """Scan a single tenant and collect a snapshot to disk.
 
@@ -365,10 +375,10 @@ def scan(
         )
         raise typer.Exit(1)
 
-    _run_scan_from_config(cfg)
+    _run_scan_from_config(cfg, owners=owners, exceptions=exceptions)
 
 
-def _run_scan_from_config(cfg: object) -> None:
+def _run_scan_from_config(cfg: object, *, owners: str = "", exceptions: str = "") -> None:
     """Execute a scan using a fully-resolved RadarConfig."""
     from ca_radar.config import RadarConfig
 
@@ -397,6 +407,8 @@ def _run_scan_from_config(cfg: object) -> None:
                 client_secret=cfg.client_secret,
                 redact=cfg.redact,
                 concurrency=cfg.concurrency,
+                owners=owners,
+                exceptions=exceptions,
             )
         )
     except KeyboardInterrupt:
@@ -416,6 +428,8 @@ async def _run_scan(
     client_secret: str,
     redact: bool,
     concurrency: int,
+    owners: str = "",
+    exceptions: str = "",
 ) -> dict:
     """Run a full single-tenant scan and return a summary dict.
 
@@ -452,6 +466,11 @@ async def _run_scan(
         data = SnapshotData.from_store(collection.snapshot_path, store)
         resolver = PolicyResolver.from_data(data)
         analysis = await run_analysers(data, resolver)
+
+    from ca_radar.enrichment import enrich_findings, load_enrichment_inputs
+
+    enrichment_config = load_enrichment_inputs(owners_path=owners, exceptions_path=exceptions)
+    enrich_findings(analysis.findings, config=enrichment_config)
 
     _print_analysis_summary(analysis)
 
@@ -642,7 +661,9 @@ def _print_analysis_summary(result: object) -> None:
     table = Table(title="Gap Analysis", show_header=True, header_style="bold cyan")
     table.add_column("ID", style="bold", no_wrap=True)
     table.add_column("Severity", no_wrap=True)
+    table.add_column("Priority", no_wrap=True)
     table.add_column("Title")
+    table.add_column("Owner")
     table.add_column("Affected", justify="right")
     table.add_column("Conf.", justify="right", style="dim")
 
@@ -658,10 +679,18 @@ def _print_analysis_summary(result: object) -> None:
         colour = _sev_colour.get(f.severity, "white")
         affected = str(len(f.affected_principals)) if f.affected_principals else "-"
         conf = f"{f.confidence:.0%}" if f.confidence < 1.0 else "100%"
+        priority = f.priority or {}
+        owner = f.owner or {}
+        owners = owner.get("names", [])
+        owner_text = (
+            ", ".join(str(item) for item in owners) if isinstance(owners, list) else str(owners)
+        )
         table.add_row(
             f.id,
             f"[{colour}]{f.severity.emoji} {f.severity.value}[/{colour}]",
+            f"{priority.get('band', '-')}/{priority.get('score', '-')}",
             f.title,
+            owner_text,
             affected,
             conf,
         )
@@ -694,6 +723,16 @@ def scan_all(
     no_redact: bool = typer.Option(False, "--no-redact", help="Disable UPN hashing in snapshots."),
     concurrency: int = typer.Option(
         5, "--concurrency", help="Max parallel Graph requests per tenant."
+    ),
+    owners: str = typer.Option(
+        "",
+        "--owners",
+        help="Path to owner mapping YAML file.",
+    ),
+    exceptions: str = typer.Option(
+        "",
+        "--exceptions",
+        help="Path to exception tracking YAML file.",
     ),
 ) -> None:
     """Scan multiple tenants from a YAML file (MSP portfolio mode).
@@ -757,6 +796,8 @@ def scan_all(
                     client_secret=tc.client_secret,
                     redact=not no_redact,
                     concurrency=concurrency,
+                    owners=owners,
+                    exceptions=exceptions,
                 )
             )
             completed.append(result)
