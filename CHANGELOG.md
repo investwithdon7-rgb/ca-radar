@@ -6,6 +6,13 @@ versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.1] — 2026-05-04
+
+### Added
+
+- Added a developer architecture guide covering the main subsystems, data flow,
+  extension points, and contribution workflow.
+
 ## [0.2.0] — 2026-05-02
 
 ### Added
@@ -87,6 +94,7 @@ Initial public release.
 - Sign-in risk features require Entra ID P2; workload identity CA requires Entra Workload ID Premium
 - `scan-all` scans tenants sequentially to avoid Graph rate limiting
 
+[0.2.1]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.2.1
 [0.2.0]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.2.0
 [0.1.2]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.1.2
 [0.1.1]: https://github.com/investwithdon7-rgb/ca-radar/releases/tag/v0.1.1
