@@ -3,8 +3,10 @@ name: Nightly scan example
 # Example workflow for MSPs running ca-radar against a tenant on a schedule.
 # Copy this to your own repo and fill in the secrets.
 on:
-  schedule:
-    - cron: "0 2 * * *"   # 02:00 UTC daily
+  # Schedule disabled in this repo — this file is an example for MSPs to copy.
+  # Uncomment the lines below and add secrets to run on a real tenant.
+  # schedule:
+  #   - cron: "0 2 * * *"   # 02:00 UTC daily
   workflow_dispatch:
 
 jobs:
