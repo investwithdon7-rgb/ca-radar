@@ -478,6 +478,8 @@ async def _run_scan(
     from ca_radar.exports.bicep_export import export_bicep
     from ca_radar.exports.csv_export import export_csv
     from ca_radar.exports.json_export import export_json
+    from ca_radar.exports.sarif_export import export_sarif
+    from ca_radar.exports.terraform_export import export_terraform
     from ca_radar.render.html.renderer import render_html_report
 
     # 3. Write findings.json (versioned schema)
@@ -502,7 +504,19 @@ async def _run_scan(
     )
     console.print(f"[dim]  findings.csv   -> {csv_path}[/dim]")
 
-    # 5. Write remediation.bicep (only when findings have templates)
+    # 5. Write findings.sarif
+    sarif_path = collection.snapshot_path / "findings.sarif"
+    sarif_path.write_text(
+        export_sarif(
+            analysis,
+            tenant_id=tenant,
+            tool_version=__version__,
+        ),
+        encoding="utf-8",
+    )
+    console.print(f"[dim]  findings.sarif -> {sarif_path}[/dim]")
+
+    # 6. Write remediation.bicep (only when findings have templates)
     bicep_src = export_bicep(
         analysis,
         tenant_id=tenant,
@@ -513,6 +527,17 @@ async def _run_scan(
         bicep_path = collection.snapshot_path / "remediation.bicep"
         bicep_path.write_text(bicep_src, encoding="utf-8")
         console.print(f"[dim]  remediation.bicep -> {bicep_path}[/dim]")
+
+    # 7. Write remediation.tf (only when findings have templates)
+    tf_src = export_terraform(
+        analysis,
+        tenant_id=tenant,
+        captured_at=collection.captured_at,
+    )
+    if tf_src:
+        tf_path = collection.snapshot_path / "remediation.tf"
+        tf_path.write_text(tf_src, encoding="utf-8")
+        console.print(f"[dim]  remediation.tf    -> {tf_path}[/dim]")
 
     # 6. Write report.html
     with console.status("[cyan]Rendering HTML report...[/cyan]"):

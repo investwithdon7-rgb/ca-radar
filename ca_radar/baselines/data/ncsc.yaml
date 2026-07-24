@@ -1,0 +1,73 @@
+# UK National Cyber Security Centre (NCSC) — Cloud Security Guidance
+# Source : https://www.ncsc.gov.uk/guidance/cloud-security-guidance
+# Version: NCSC Cloud Security & Identity Baseline v2.0
+#
+# Conditional Access relevant controls mapped to ca-radar finding IDs.
+
+framework: NCSC
+version: "2.0"
+url: "https://www.ncsc.gov.uk/guidance/cloud-security-guidance"
+controls:
+
+  - id: NCSC.CA.1
+    title: "Legacy authentication protocols MUST be blocked"
+    description: >
+      All legacy authentication protocols (EAS, IMAP, POP3, SMTP) that bypass multi-factor
+      authentication MUST be explicitly blocked via Conditional Access.
+    finding_ids:
+      - CA-LEGACY-001
+      - CA-LEGACY-002
+
+  - id: NCSC.CA.2
+    title: "Multi-Factor Authentication MUST be enforced for all users"
+    description: >
+      MFA MUST be required for all user accounts attempting to access cloud services
+      and corporate data.
+    finding_ids:
+      - CA-MFA-001
+
+  - id: NCSC.CA.3
+    title: "Phishing-resistant MFA MUST be required for privileged administration"
+    description: >
+      Privileged administrator roles MUST be protected by phishing-resistant authentication
+      methods (FIDO2 or CBA) via dedicated Conditional Access policies.
+    finding_ids:
+      - CA-MFA-002
+      - CA-ADMIN-001
+
+  - id: NCSC.CA.4
+    title: "Emergency Access (Break-Glass) accounts MUST be isolated"
+    description: >
+      Emergency break-glass accounts MUST exist, be excluded from normal MFA policies to avoid
+      lockouts, and be protected by hardware phishing-resistant credentials.
+    finding_ids:
+      - CA-BG-001
+      - CA-BG-002
+
+  - id: NCSC.CA.5
+    title: "Risk-based Conditional Access MUST be configured"
+    description: >
+      Automated risk-based policies MUST require MFA or password reset when high sign-in or
+      user risk is detected by Entra ID Identity Protection.
+    finding_ids:
+      - CA-RISK-001
+      - CA-RISK-002
+
+  - id: NCSC.CA.6
+    title: "Conditional Access exclusion hygiene MUST be strictly maintained"
+    description: >
+      Exclusion groups in Conditional Access policies MUST be kept minimal and periodically audited
+      to prevent unintentional policy bypasses.
+    finding_ids:
+      - CA-EXCL-001
+      - CA-EXCL-002
+
+  - id: NCSC.CA.7
+    title: "Workload identities MUST be protected by Conditional Access"
+    description: >
+      Service principals and application identities MUST be governed by dedicated Conditional
+      Access policies for workload identities.
+    finding_ids:
+      - CA-SP-001
+      - CA-SP-002
+      - CA-SP-003

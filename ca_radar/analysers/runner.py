@@ -33,12 +33,16 @@ def _default_analysers() -> list[Analyser]:
     from ca_radar.analysers.packs.admin_roles.admin_roles import AdminRolesAnalyser
     from ca_radar.analysers.packs.break_glass.break_glass import BreakGlassAnalyser
     from ca_radar.analysers.packs.coverage.mfa_coverage import MfaCoverageAnalyser
+    from ca_radar.analysers.packs.device_compliance.device_compliance import (
+        DeviceComplianceAnalyser,
+    )
     from ca_radar.analysers.packs.exclusions.exclusions import ExclusionAnalyser
     from ca_radar.analysers.packs.legacy_auth.legacy_protocols import LegacyAuthAnalyser
     from ca_radar.analysers.packs.risk_session.risk_session import RiskSessionAnalyser
     from ca_radar.analysers.packs.service_principals.service_principals import (
         ServicePrincipalAnalyser,
     )
+    from ca_radar.analysers.packs.staging.staging import StagingHygieneAnalyser
 
     return [
         MfaCoverageAnalyser(),
@@ -48,6 +52,8 @@ def _default_analysers() -> list[Analyser]:
         AdminRolesAnalyser(),
         ServicePrincipalAnalyser(),
         RiskSessionAnalyser(),
+        DeviceComplianceAnalyser(),
+        StagingHygieneAnalyser(),
     ]
 
 

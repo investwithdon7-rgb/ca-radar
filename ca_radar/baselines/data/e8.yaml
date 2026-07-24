@@ -1,0 +1,63 @@
+# ACSC Essential Eight Maturity Model — Multi-Factor Authentication & Restrict Admin Privileges
+# Source : https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security-mitigation-strategies/essential-eight
+# Version: Essential Eight Baseline 2024
+#
+# Controls directly addressable by Conditional Access policies.
+
+framework: "Essential Eight"
+version: "2024"
+url: "https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security-mitigation-strategies/essential-eight"
+controls:
+
+  - id: E8.MFA.1
+    title: "Multi-factor authentication is required to authenticate users to online services"
+    description: >
+      MFA is enforced via Conditional Access for all organization users accessing cloud apps
+      and repositories.
+    finding_ids:
+      - CA-MFA-001
+
+  - id: E8.MFA.2
+    title: "Phishing-resistant multi-factor authentication is used for privileged users"
+    description: >
+      Privileged accounts use phishing-resistant authentication methods (FIDO2 security keys,
+      Windows Hello for Business, or smart cards) enforced by CA authentication strength policies.
+    finding_ids:
+      - CA-MFA-002
+      - CA-ADMIN-001
+
+  - id: E8.MFA.3
+    title: "Legacy authentication protocols are blocked"
+    description: >
+      Authentication protocols that do not support multi-factor authentication are blocked
+      unconditionally for all accounts.
+    finding_ids:
+      - CA-LEGACY-001
+      - CA-LEGACY-002
+
+  - id: E8.ADM.1
+    title: "Administrative accounts and PIM activations are strictly controlled"
+    description: >
+      Privileged role sign-ins and PIM eligible user activations require MFA and have restricted
+      session lifetimes enforced via sign-in frequency controls.
+    finding_ids:
+      - CA-SESS-001
+      - CA-ADMIN-002
+
+  - id: E8.ADM.2
+    title: "Emergency break-glass accounts are isolated and protected"
+    description: >
+      At least one break-glass account exists, excluded from standard MFA policies to prevent
+      lockouts, and secured by hardware tokens.
+    finding_ids:
+      - CA-BG-001
+      - CA-BG-002
+
+  - id: E8.SP.1
+    title: "Workload identities and service principals are secured"
+    description: >
+      Non-human workload identities (service principals) are monitored and restricted by
+      Conditional Access policies for workload identities.
+    finding_ids:
+      - CA-SP-001
+      - CA-SP-002
