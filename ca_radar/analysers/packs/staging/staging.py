@@ -32,9 +32,7 @@ class StagingHygieneAnalyser(Analyser):
         findings: list[Finding] = []
 
         report_only_policies = [
-            p
-            for p in data.policies
-            if p.state == PolicyState.enabledForReportingButNotEnforced
+            p for p in data.policies if p.state == PolicyState.enabledForReportingButNotEnforced
         ]
 
         if report_only_policies:

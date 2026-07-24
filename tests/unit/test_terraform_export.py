@@ -45,9 +45,7 @@ def test_export_terraform_generates_hcl_resource_blocks() -> None:
     )
     analysis = AnalysisResult(findings=[finding1, finding2])
 
-    tf_str = export_terraform(
-        analysis, tenant_id="contoso.com", captured_at="2026-07-24T10:00:00Z"
-    )
+    tf_str = export_terraform(analysis, tenant_id="contoso.com", captured_at="2026-07-24T10:00:00Z")
 
     assert 'resource "azuread_conditional_access_policy" "require_mfa_all_users"' in tf_str
     assert 'resource "azuread_conditional_access_policy" "require_device_compliance"' in tf_str

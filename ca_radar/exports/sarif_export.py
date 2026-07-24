@@ -24,6 +24,7 @@ def _severity_to_sarif_level(sev: Severity) -> str:
             return "warning"
         case Severity.low:
             return "note"
+    return "note"
 
 
 def export_sarif(
@@ -49,12 +50,13 @@ def export_sarif(
 
     for f in analysis.findings:
         if f.id not in rules_map:
+            remed_text = f.remediation.description if f.remediation else "No remediation provided."
             rules_map[f.id] = {
                 "id": f.id,
                 "name": f.id.replace("-", "_"),
                 "shortDescription": {"text": f.title},
                 "fullDescription": {"text": f.summary},
-                "help": {"text": f"{f.why_it_matters}\n\nRemediation: {f.remediation.description}"},
+                "help": {"text": f"{f.why_it_matters}\n\nRemediation: {remed_text}"},
                 "properties": {
                     "tags": ["security", "entra-id", "conditional-access"],
                     "precision": "high",
